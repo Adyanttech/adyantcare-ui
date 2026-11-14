@@ -543,3 +543,31 @@ input[type=checkbox] { min-width: 0; accent-color: var(--brand); }
 .contact-seg { display: flex; margin: 4px 0 12px; }
 .hint { display: block; margin-top: 4px; font-size: 12px; font-weight: 400; color: var(--muted); line-height: 1.35; }
 .authcard .hint { color: #9fb6d1; }
+
+/* Appointment slots */
+.slotdays { display: grid; gap: 16px; }
+.slotday-h { font: 700 13px var(--display); color: var(--muted); margin-bottom: 8px; }
+.slotgrid { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot { padding: 9px 14px; min-width: 84px; border-radius: 12px; border: 1px solid var(--brand-200); background: #fff; color: var(--brand-700); font: 600 14px var(--body); cursor: pointer; transition: background .15s, transform .15s, border-color .15s; }
+.slot:hover { background: var(--brand-50); transform: translateY(-1px); }
+.slot.on { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 8px 18px -10px var(--brand); }
+.picklist { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.pick { text-align: left; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: #fff; cursor: pointer; font: 500 14px var(--body); color: inherit; display: grid; gap: 3px; transition: border-color .15s, box-shadow .15s; }
+.pick:hover:not(:disabled) { border-color: var(--brand-200); }
+.pick.on { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
+.pick:disabled { opacity: .55; cursor: default; }
+.pick small { color: var(--muted); font-size: 12.5px; }
+.stepno { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--brand-100); color: var(--brand-700); font: 700 13px var(--display); margin-right: 8px; }
+@media (max-width: 560px) {
+  .slot { flex: 1 0 28%; min-width: 0; padding: 11px 6px; }
+  .picklist { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Reminders page */
+label.check { flex-direction: row; align-items: center; gap: 8px; color: inherit; font-weight: 600; font-size: 14px; }
+label.check input { width: auto; min-width: 0; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--brand-700); font: inherit; cursor: pointer; text-decoration: underline; }
+.preview { margin: 14px 0; padding: 12px 16px; border-radius: 14px; background: var(--brand-50); border: 1px dashed var(--brand-200); }
+.preview p { margin: 4px 0 0; }
+.note.info { background: var(--brand-50); border-color: var(--brand-200); color: var(--brand-700); margin-bottom: 14px; }
+.note.bad { margin-bottom: 14px; }

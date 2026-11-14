@@ -16,6 +16,9 @@ import Consult from './pages/Consult';
 import Lab from './pages/Lab';
 import Billing from './pages/Billing';
 import MyRecord from './pages/MyRecord';
+import Schedule from './pages/Schedule';
+import Reminders from './pages/Reminders';
+import BookAppointment from './pages/BookAppointment';
 import Reports from './pages/Reports';
 import Branding from './pages/Branding';
 
@@ -46,6 +49,9 @@ export default function App() {
       <Route path="/branding" element={<Guard roles={['ADMIN']}><Branding /></Guard>} />
       <Route path="/patients" element={<Guard roles={['ADMIN', 'FRONT_DESK']}><Patients /></Guard>} />
       <Route path="/appointments" element={<Guard roles={['ADMIN', 'FRONT_DESK', 'DOCTOR']}><Appointments /></Guard>} />
+      <Route path="/schedule" element={<Guard roles={['ADMIN', 'FRONT_DESK', 'DOCTOR']}><Schedule /></Guard>} />
+      <Route path="/reminders" element={<Guard roles={['ADMIN', 'FRONT_DESK', 'DOCTOR']}><Reminders /></Guard>} />
+      <Route path="/book" element={<Guard roles={['PATIENT']}><BookAppointment /></Guard>} />
       <Route path="/consult/:id" element={<Guard roles={['DOCTOR']}><Consult /></Guard>} />
       <Route path="/lab" element={<Guard roles={['LAB_TECH']}><Lab /></Guard>} />
       <Route path="/billing" element={<Guard roles={['ADMIN', 'FRONT_DESK']}><Billing /></Guard>} />

@@ -76,3 +76,27 @@ export interface Insights {
   diagnoses: { label: string; value: number }[];
   minGroup: number;
 }
+
+// Doctor schedule and booking
+export interface Slot {
+  id: string; doctorId: string; doctorName: string; startsAt: string; endsAt: string;
+  status: 'OPEN' | 'BOOKED' | 'CLOSED' | string; patientName: string | null; mrn: string | null; appointmentId: string | null;
+}
+export interface Plan { id: string; doctorId: string; doctorName: string; dayOfWeek: number; start: string; end: string; slotMinutes: number }
+export interface ReleaseResult { created: number; skipped: number }
+export interface BookingHospital { id: string; name: string; city: string; mrn: string; timeZone: string }
+export interface BookingDoctor { id: string; name: string; specialty: string | null; openSlots: number }
+
+// Appointment reminders and patient lookup
+export interface ReminderSettings {
+  enabled: boolean; dayBeforeEnabled: boolean; dayBeforeHours: number; shortEnabled: boolean; shortHours: number;
+  template: string; defaultTemplate: string; jobEnabled: boolean;
+}
+export interface ReminderLogItem {
+  id: string; kind: 'DAY_BEFORE' | 'SHORT_NOTICE' | string; status: 'PENDING' | 'SENT' | 'FAILED' | 'SKIPPED' | string;
+  dueAt: string; sentAt: string | null; error: string | null; patientName: string; mrn: string; appointmentAt: string;
+}
+export interface PatientLookup {
+  found: boolean; matchedBy: 'ID' | 'PHONE' | 'NONE'; fullName: string | null; dob: string | null; gender: string | null;
+  email: string | null; idLabel: string | null; atThisHospital: boolean; mrn: string | null; warning: string | null;
+}

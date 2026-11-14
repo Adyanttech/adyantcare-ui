@@ -2,10 +2,10 @@ const BASE = ((import.meta.env.VITE_API_URL as string | undefined) || 'http://lo
 const KEY = 'adyantcare_token';
 
 export const getToken = (): string | null => {
-  try { return localStorage.getItem(KEY); } catch { return null; }
+  try { return window.localStorage.getItem(KEY); } catch { return null; }
 };
 export const setToken = (t: string | null): void => {
-  try { if (t) localStorage.setItem(KEY, t); else localStorage.removeItem(KEY); } catch { /* ignore */ }
+  try { if (t) window.localStorage.setItem(KEY, t); else window.localStorage.removeItem(KEY); } catch { /* ignore */ }
 };
 
 let onUnauthorized: () => void = () => {};
@@ -37,4 +37,5 @@ export const api = {
   post: <T>(p: string, b: unknown = {}) => request<T>('POST', p, b),
   put: <T>(p: string, b: unknown = {}) => request<T>('PUT', p, b),
   patch: <T>(p: string, b: unknown = {}) => request<T>('PATCH', p, b),
+  del: <T>(p: string) => request<T>('DELETE', p),
 };

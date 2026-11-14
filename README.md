@@ -2,7 +2,7 @@
 
 ## What this is
 
-The web app for **AdyantCare**, a hospital management platform from Adyant Technologies LLC. One app serves every hospital and every role: platform admin, hospital admin, doctor, front desk, lab technician and patient. Each hospital gets its own look (logo, banner, colour, tagline), live dashboards, reports with CSV export, appointments, consultations, lab, billing and a patient portal. Built with React 18, TypeScript and Vite.
+The web app for **AdyantCare**, a hospital management platform from Adyant Technologies LLC. One app serves every hospital and every role: platform admin, hospital admin, doctor, front desk, lab technician and patient. Each hospital gets its own look (logo, banner, colour, tagline), live dashboards, reports with CSV export, doctor-released appointment slots (patients and front desk book them), consultations, lab, billing and a patient portal. Built with React 18, TypeScript and Vite.
 
 **Business value:** a polished, branded experience that a hospital can see as its own product on day one, with no installs (it runs in the browser, on any device). Staff work faster from role-specific screens, administrators get reports they can act on, and patients get one combined record across hospitals, linked by their Aadhaar (India) or SSN (US).
 
@@ -52,3 +52,11 @@ src/
 ## Deploy
 
 See `DEPLOY_GUIDE.md` in the parent folder (Vercel free plan, `vercel.json` included). Set `VITE_API_URL` in Vercel to the API address.
+
+## Tests
+
+`npm install` then `npm test` (Vitest + Testing Library). Tests live in `src/__tests__`.
+
+## Appointment reminders
+
+Staff set reminder timing and wording on the Reminders page. Sending is done by the API job, which is off until `Reminders__Enabled=true` is set on the server.
