@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { Badge, Status, day, useAction, useLoad } from '../ui';
 import type { PortalRecord } from '../types';
@@ -10,6 +11,11 @@ export default function MyRecord() {
     if (await act(() => api.put('/me/consent', { consent }), 'Preference saved')) reload();
   };
 
+  const cancel = async (id: string) => {
+    if (!window.confirm('Cancel this appointment?')) return;
+    if (await act(() => api.post(`/me/appointments/${id}/cancel`), 'Appointment cancelled')) reload();
+  };
+
   if (loading || error || !data) return <Status loading={loading} error={error} />;
   const { person, hospitals, appointments, prescriptions, labs } = data;
 
@@ -17,6 +23,7 @@ export default function MyRecord() {
     <>
       <h1>My health record</h1>
       <p className="sub">Records from {hospitals.map((h) => h.name).join(', ')}. Only you can see this combined view.</p>
+      <p><Link className="btn" to="/book">Book an appointment</Link></p>
 
       <div className="card mb">
         <h2>Privacy</h2>
@@ -39,6 +46,14 @@ export default function MyRecord() {
                   <td>{a.hospitalName}<div className="muted">{a.doctorName}</div></td>
                   <td>{a.diagnosis || a.reason || '-'}</td>
                   <td><Badge>{a.status.replace('_', ' ')}</Badge></td>
+                  <td>
+                    {a.status === 'BOOKED' && new Date(a.scheduledAt).getTime() - Date.now() > 2 * 3600000 && (
+                      <button className="btn danger sm" onClick={() => cancel(a.id)}>Cancel</button>
+                    )}
+                    {a.status === 'BOOKED' && new Date(a.scheduledAt).getTime() > Date.now() && new Date(a.scheduledAt).getTime() - Date.now() <= 2 * 3600000 && (
+                      <span className="muted">Call to cancel</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {appointments.length === 0 && <tr><td className="muted">None.</td></tr>}

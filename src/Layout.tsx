@@ -5,7 +5,7 @@ import { useBranding } from './brand';
 import Footer from './Footer';
 import { Icon, type IconName } from './icons';
 import { HospitalMark, Logo, LogoMark } from './Logo';
-import { Avatar, todayLabel } from './ui';
+import { Avatar, setDisplayZone, todayLabel, zoneForCurrency } from './ui';
 import type { Role } from './types';
 
 type NavItem = [path: string, label: string, icon: IconName];
@@ -14,13 +14,13 @@ const NAV: Record<Role, NavItem[]> = {
   SUPER_ADMIN: [['/dashboard', 'Overview', 'home'], ['/hospitals', 'Hospitals', 'hospital'], ['/insights', 'Insights', 'chart']],
   ADMIN: [
     ['/dashboard', 'Overview', 'home'], ['/reports', 'Reports', 'file'], ['/patients', 'Patients', 'user'],
-    ['/appointments', 'Appointments', 'calendar'], ['/billing', 'Billing', 'receipt'], ['/staff', 'Staff', 'users'],
+    ['/appointments', 'Appointments', 'calendar'], ['/schedule', 'Schedule', 'clock'], ['/reminders', 'Reminders', 'bell'], ['/billing', 'Billing', 'receipt'], ['/staff', 'Staff', 'users'],
     ['/branding', 'Branding', 'palette'],
   ],
-  DOCTOR: [['/dashboard', 'Overview', 'home'], ['/appointments', 'My appointments', 'calendar']],
-  FRONT_DESK: [['/dashboard', 'Overview', 'home'], ['/patients', 'Patients', 'user'], ['/appointments', 'Appointments', 'calendar'], ['/billing', 'Billing', 'receipt']],
+  DOCTOR: [['/dashboard', 'Overview', 'home'], ['/appointments', 'My appointments', 'calendar'], ['/schedule', 'My schedule', 'clock'], ['/reminders', 'Reminders', 'bell']],
+  FRONT_DESK: [['/dashboard', 'Overview', 'home'], ['/patients', 'Patients', 'user'], ['/appointments', 'Appointments', 'calendar'], ['/schedule', 'Schedule', 'clock'], ['/reminders', 'Reminders', 'bell'], ['/billing', 'Billing', 'receipt']],
   LAB_TECH: [['/dashboard', 'Overview', 'home'], ['/lab', 'Lab orders', 'flask']],
-  PATIENT: [['/dashboard', 'Overview', 'home'], ['/my', 'My health record', 'heart']],
+  PATIENT: [['/dashboard', 'Overview', 'home'], ['/book', 'Book appointment', 'calendar'], ['/my', 'My health record', 'heart']],
 };
 
 export const ROLE_LABEL: Record<Role, string> = {
@@ -38,6 +38,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   useEffect(() => { setOpen(false); }, [loc.pathname]);
 
   if (!user) return null;
+  setDisplayZone(zoneForCurrency(user.hospital?.currency));   // idempotent; set before the page below renders
   const items = NAV[user.role] || [];
   const here = items.find(([to]) => loc.pathname === to || loc.pathname.startsWith(`${to}/`));
   const title = here?.[1] ?? (loc.pathname.startsWith('/consult') ? 'Consultation' : loc.pathname === '/change-password' ? 'Change password' : '');

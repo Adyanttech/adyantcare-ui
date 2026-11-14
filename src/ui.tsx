@@ -143,9 +143,19 @@ export const greeting = () => {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 };
 export const todayLabel = () => new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+// Times are shown in the hospital's own time zone (set once from the signed-in user's hospital), not the browser's.
+let displayZone: string | undefined;
+export const setDisplayZone = (zone: string | undefined) => { displayZone = zone; };
+export const getDisplayZone = () => displayZone;
+/** IANA time zone for a hospital, from its currency (INR = India, USD = United States). */
+export const zoneForCurrency = (currency?: string | null): string | undefined =>
+  currency === 'USD' ? 'America/New_York' : currency === 'INR' ? 'Asia/Kolkata' : undefined;
+/** Today's date as yyyy-mm-dd in a time zone (the browser's when none is given). */
+export const todayIn = (zone?: string): string => new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+
 export const shortDay = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-export const dt = (d: string) => new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-export const day = (d: string) => new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium' });
+export const dt = (d: string) => new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short', timeZone: displayZone });
+export const day = (d: string) => new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium', timeZone: displayZone });
 
 export const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
 export const todayWindow = () => {

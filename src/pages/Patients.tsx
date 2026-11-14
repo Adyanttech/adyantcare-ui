@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { useAuth } from '../auth';
+import { looksLikeNationalId, looksLikePhone } from '../lib';
 import { Badge, NationalIdField, PhoneField, Status, useAction, useLoad, useToast } from '../ui';
-import type { CountryCode, Patient, RegisterResult } from '../types';
+import type { CountryCode, Patient, PatientLookup, RegisterResult } from '../types';
 
 const EMPTY = { fullName: '', email: '', dob: '', gender: '', portalPassword: '', nationalId: '' };
 
@@ -20,6 +21,29 @@ export default function Patients() {
   const [form, setForm] = useState(EMPTY);
   const [country, setCountry] = useState<CountryCode>(user?.hospital?.currency === 'USD' ? 'US' : 'IN');
   const [phone, setPhone] = useState('');
+  // Once a full phone number or ID is typed, check whether this person is already on the platform (for example at another hospital).
+  const [lookup, setLookup] = useState<PatientLookup | null>(null);
+  const lastKey = useRef('');
+  useEffect(() => {
+    const okPhone = looksLikePhone(country, phone);
+    const okId = looksLikeNationalId(country, form.nationalId);
+    if (!okPhone && !okId) { lastKey.current = ''; setLookup(null); return; }
+    const key = `${country}|${okPhone ? phone : ''}|${okId ? form.nationalId : ''}`;
+    if (key === lastKey.current) return;
+    const timer = setTimeout(async () => {
+      lastKey.current = key;
+      try {
+        const r = await api.post<PatientLookup>('/patients/lookup', { country, phone: okPhone ? phone : null, nationalId: okId ? form.nationalId : null });
+        setLookup(r);
+        // An ID match is proof of identity: fill the form from the existing person.
+        if (r.found && r.matchedBy === 'ID') {
+          setForm((f) => ({ ...f, fullName: r.fullName ?? f.fullName, email: r.email ?? f.email, dob: r.dob ?? f.dob, gender: r.gender ?? f.gender }));
+        }
+      } catch { setLookup(null); }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [country, phone, form.nationalId]);
+
   const set = (k: keyof typeof EMPTY) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
 
   const register = async (e: FormEvent) => {
@@ -37,7 +61,7 @@ export default function Patients() {
     if (!r) return;
     if (!r.created) toast('Already registered at this hospital');
     else toast(r.linkedExisting ? `Registered (${r.mrn}) and linked to the existing person` : `Registered (${r.mrn})`);
-    setForm(EMPTY); setPhone(''); reload();
+    setForm(EMPTY); setPhone(''); setLookup(null); lastKey.current = ''; reload();
   };
 
   return (
@@ -50,6 +74,21 @@ export default function Patients() {
 
       <div className="card mb">
         <h2>Register patient</h2>
+        {lookup?.found && lookup.matchedBy === 'ID' && (
+          <div className="note info" role="status">
+            {lookup.atThisHospital
+              ? <>Already registered at this hospital (MRN {lookup.mrn}). Registering again changes nothing.</>
+              : <>Found on the platform ({lookup.idLabel}). Their details are filled in. Registering links them to this hospital; clinical records stay separate.</>}
+          </div>
+        )}
+        {lookup?.found && lookup.matchedBy === 'PHONE' && (
+          <div className="note info" role="status">
+            {lookup.atThisHospital
+              ? <>{lookup.fullName} is already registered at this hospital (MRN {lookup.mrn}).</>
+              : <>A person with this phone number is already on the platform ({lookup.fullName}). Enter their Aadhaar / SSN to fill in their details and link them.</>}
+          </div>
+        )}
+        {lookup?.warning && <div className="note bad" role="alert">{lookup.warning}</div>}
         <form className="row" onSubmit={register}>
           <label>Full name<input value={form.fullName} onChange={set('fullName')} required /></label>
           <PhoneField country={country} setCountry={setCountry} phone={phone} setPhone={setPhone} />

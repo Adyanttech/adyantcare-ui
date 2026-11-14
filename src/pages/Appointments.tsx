@@ -2,11 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../auth';
+import SlotPicker from '../SlotPicker';
 import { Badge, Status, dt, startOfToday, useAction, useLoad } from '../ui';
-import type { AppointmentRow, Doctor, Patient } from '../types';
+import type { AppointmentRow, Doctor, Patient, Slot } from '../types';
 
 const TONE: Record<string, string> = { BOOKED: '', CHECKED_IN: 'warn', COMPLETED: 'ok', CANCELLED: 'bad' };
-const EMPTY = { patientId: '', doctorId: '', scheduledAt: '', reason: '' };
+const EMPTY = { patientId: '', doctorId: '', slotId: '', reason: '' };
 
 export default function Appointments() {
   const { user } = useAuth();
@@ -27,11 +28,18 @@ export default function Appointments() {
   const [form, setForm] = useState(EMPTY);
   const set = (k: keyof typeof EMPTY) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
 
+  // Open slots the chosen doctor has released for the next two weeks
+  const until = encodeURIComponent(new Date(Date.now() + 14 * 86400000).toISOString());
+  const openSlots = useLoad<{ slots: Slot[] }>(['open-slots', form.doctorId],
+    () => api.get(`/schedule/slots?doctorId=${form.doctorId}&status=OPEN&to=${until}`), !isDoctor && !!form.doctorId);
+
   const book = async (e: FormEvent) => {
     e.preventDefault();
-    // datetime-local has no time zone: convert from the user's local time to a real instant
-    const ok = await act(() => api.post('/appointments', { ...form, scheduledAt: new Date(form.scheduledAt).toISOString() }), 'Appointment booked');
-    if (ok) { setForm(EMPTY); list.reload(); }
+    if (!form.slotId) return;
+    const ok = await act(() => api.post('/appointments', { patientId: form.patientId, slotId: form.slotId, reason: form.reason }), 'Appointment booked');
+    if (ok) setForm({ ...EMPTY, patientId: form.patientId, doctorId: form.doctorId });
+    list.reload();
+    openSlots.reload();   // also refreshes the list if the slot was taken a moment ago
   };
   const setStatus = async (id: string, status: string) => {
     if (await act(() => api.patch(`/appointments/${id}/status`, { status }))) list.reload();
@@ -55,15 +63,24 @@ export default function Appointments() {
             </label>
             <label>
               Doctor
-              <select value={form.doctorId} onChange={set('doctorId')} required>
+              <select value={form.doctorId} onChange={(e) => setForm({ ...form, doctorId: e.target.value, slotId: '' })} required>
                 <option value="">Select</option>
                 {lookups.data?.doctors.map((d) => <option key={d.id} value={d.id}>{d.name}{d.specialty ? ` · ${d.specialty}` : ''}</option>)}
               </select>
             </label>
-            <label>When<input type="datetime-local" value={form.scheduledAt} onChange={set('scheduledAt')} required /></label>
             <label>Reason<input value={form.reason} onChange={set('reason')} placeholder="Fever, follow-up..." /></label>
-            <button className="btn">Book</button>
           </form>
+          {form.doctorId && (
+            <form onSubmit={book} style={{ marginTop: 16 }}>
+              <div className="field-label" style={{ marginBottom: 8 }}>Pick an open time</div>
+              <Status loading={openSlots.loading} error={openSlots.error} />
+              {openSlots.data && (
+                <SlotPicker slots={openSlots.data.slots} value={form.slotId} onChange={(id) => setForm({ ...form, slotId: id })}
+                  empty="This doctor has no open slots in the next two weeks. Release time on the Schedule page." />
+              )}
+              <button className="btn" style={{ marginTop: 16 }} disabled={!form.slotId || !form.patientId}>Book selected time</button>
+            </form>
+          )}
         </div>
       )}
 
